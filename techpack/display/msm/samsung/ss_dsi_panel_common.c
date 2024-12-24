@@ -28,13 +28,10 @@ Copyright (C) 2020, Samsung Electronics. All rights reserved.
 #include "ss_dsi_panel_common.h"
 #include <linux/preempt.h>
 #include <linux/sec_param.h>
-<<<<<<< HEAD
 #include <linux/input/sec_cmd.h>
-=======
 #ifdef CONFIG_HYBRID_DC_DIMMING
 #include "sde_expo_dim_layer.h"
 #endif
->>>>>>> d2c915a2d... display: introduce hybrid DC dimming
 
 static void ss_panel_recovery(struct samsung_display_driver_data *vdd);
 static void ss_event_osc_te_fitting(
