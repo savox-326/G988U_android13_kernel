@@ -29,6 +29,9 @@ Copyright (C) 2020, Samsung Electronics. All rights reserved.
 #include <linux/preempt.h>
 #include <linux/sec_param.h>
 #include <linux/input/sec_cmd.h>
+#ifdef CONFIG_HYBRID_DC_DIMMING
+#include "sde_expo_dim_layer.h"
+#endif
 
 static void ss_panel_recovery(struct samsung_display_driver_data *vdd);
 static void ss_event_osc_te_fitting(
@@ -6490,6 +6493,30 @@ bool is_hbm_level(struct samsung_display_driver_data *vdd)
 	return true;
 }
 
+#ifdef CONFIG_HYBRID_DC_DIMMING
+static void ss_calc_brightness_level(struct samsung_display_driver_data *vdd, int level)
+{
+	int current_level;
+	struct backlight_device *bd = GET_SDE_BACKLIGHT_DEVICE(vdd);
+	bool use_current_bl_level =
+		level == USE_CURRENT_BL_LEVEL;
+	bool should_skip_update =
+		use_current_bl_level && (bd->props.brightness != vdd->br_info.common_br.bl_level);
+
+	if (use_current_bl_level) {
+		current_level = bd->props.brightness;
+	} else {
+		current_level = level;
+	}
+
+	if (ss_is_panel_on(vdd)) {
+		vdd->br_info.common_br.bl_level = expo_map_dim_level(current_level, GET_DSI_DISPLAY(vdd), should_skip_update);
+	} else if (level != USE_CURRENT_BL_LEVEL) {
+		vdd->br_info.common_br.bl_level = level;
+	}
+}
+#endif
+
 /* ss_brightness_dcs() is called not in locking status.
  * Instead, calls ss_set_backlight() when you need to controll backlight
  * in locking status.
@@ -6608,8 +6635,12 @@ int ss_brightness_dcs(struct samsung_display_driver_data *vdd, int level, int ba
 		}
 	}
 
+#ifdef CONFIG_HYBRID_DC_DIMMING
+	ss_calc_brightness_level(vdd, level);
+#else
 	if (level != USE_CURRENT_BL_LEVEL)
 		vdd->br_info.common_br.bl_level = level;
+#endif
 
 	/* check the lcd id for DISPLAY_1 or DISPLAY_2 */
 	if (!ss_panel_attached(vdd->ndx))
