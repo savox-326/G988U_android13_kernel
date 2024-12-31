@@ -3711,6 +3711,10 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 				struct dsi_parser_utils *utils)
 {
 	struct msm_roi_caps *roi_caps = NULL;
+#ifndef CONFIG_HYBRID_DC_DIMMING
+	const char *data;
+	int rc = 0;
+#endif
 
 	if (!mode || !mode->priv_info) {
 		DSI_ERR("invalid arguments\n");
@@ -3724,9 +3728,6 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 #ifdef CONFIG_HYBRID_DC_DIMMING
 	return 0;
 #else
-	const char *data;
-	int rc = 0;
-
 	data = utils->get_property(utils->data,
 		"qcom,partial-update-enabled", NULL);
 	if (data) {

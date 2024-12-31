@@ -19,6 +19,8 @@
 #include "sde_crtc.h"
 #include "sde_expo_dim_layer.h"
 
+extern dc_dim_alpha;
+
 static int interpolate(int x, int xa, int xb, int ya, int yb)
 {
 	int bf, factor, plus;
@@ -57,32 +59,7 @@ static int brightness_to_alpha(uint8_t brightness)
 	return alpha;
 }
 
-static void set_dim_layer_exposure(uint8_t brightness, struct dsi_display *display)
-{
-	struct drm_crtc *crtc;
-	struct drm_crtc_state *state;
-	struct msm_drm_private *priv;
-	struct drm_property *prop;
-
-	if (!display->drm_conn) {
-		pr_err("The display is not connected!!\n");
-		return;
-	};
-
-	if (!display->drm_conn->state->crtc) {
-		pr_err("No CRTC on display connector!!\n");
-		return;
-	}
-
-	crtc = display->drm_conn->state->crtc;
-	state = crtc->state;
-	priv = crtc->dev->dev_private;
-	prop = priv->crtc_property[CRTC_PROP_DIM_LAYER_EXPO];
-
-	crtc->funcs->atomic_set_property(crtc, state, prop, (uint64_t)brightness_to_alpha(brightness));
-}
-
-int expo_map_dim_level(int level, struct dsi_display *display)
+int expo_map_dim_level(int level, struct dsi_display *display, bool skip_update)
 {
 	int override_level;
 	uint8_t brightness;
@@ -98,8 +75,10 @@ int expo_map_dim_level(int level, struct dsi_display *display)
 	} else {
 		override_level = level;
 	}
-
-	set_dim_layer_exposure(brightness, display);
+	
+	if (!skip_update) {
+		dc_dim_alpha = brightness_to_alpha(brightness);
+	}
 
 	return override_level;
 }

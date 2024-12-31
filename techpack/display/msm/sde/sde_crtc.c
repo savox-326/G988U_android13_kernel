@@ -2564,13 +2564,13 @@ static void _sde_crtc_set_dim_layer_v1(struct drm_crtc *crtc,
 }
 
 #ifdef CONFIG_HYBRID_DC_DIMMING
+int dc_dim_alpha = 0;
 static int sde_crtc_config_exposure_dim_layer(struct drm_crtc_state *crtc_state, int stage)
 {
 	struct sde_kms *kms;
 	struct sde_hw_dim_layer *dim_layer;
 	struct sde_crtc_state *cstate = to_sde_crtc_state(crtc_state);
 	struct drm_display_mode *mode = &crtc_state->adjusted_mode;
-	int alpha = sde_crtc_get_property(cstate, CRTC_PROP_DIM_LAYER_EXPO);
 	struct samsung_display_driver_data *vdd = ss_get_vdd(PRIMARY_DISPLAY_NDX);
 
 	kms = _sde_crtc_get_kms(crtc_state->crtc);
@@ -2583,7 +2583,7 @@ static int sde_crtc_config_exposure_dim_layer(struct drm_crtc_state *crtc_state,
 		return -EINVAL;
 	}
 
-	if (!alpha || ss_is_panel_lpm(vdd)) {
+	if (!dc_dim_alpha || ss_is_panel_lpm(vdd)) {
 		cstate->exposure_dim_layer = NULL;
 		return 0;
 	}
@@ -2600,7 +2600,7 @@ static int sde_crtc_config_exposure_dim_layer(struct drm_crtc_state *crtc_state,
 	dim_layer->rect.y = 0;
 	dim_layer->rect.w = mode->hdisplay;
 	dim_layer->rect.h = mode->vdisplay;
-	dim_layer->color_fill = (struct sde_mdss_color) {0, 0, 0, alpha};
+	dim_layer->color_fill = (struct sde_mdss_color) {0, 0, 0, dc_dim_alpha};
 	cstate->exposure_dim_layer = dim_layer;
 
 	return 0;
@@ -5323,10 +5323,6 @@ static void sde_crtc_install_properties(struct drm_crtc *crtc,
 					0x0, 0, ~0, 0, CRTC_PROP_DEST_SCALER);
 		}
 	}
-#ifdef CONFIG_HYBRID_DC_DIMMING
-	msm_property_install_volatile_range(&sde_crtc->property_info,
-			"dim_layer_exposure", 0x0, 0, ~0, 0, CRTC_PROP_DIM_LAYER_EXPO);
-#endif
 
 	sde_kms_info_add_keyint(info, "has_src_split", catalog->has_src_split);
 	sde_kms_info_add_keyint(info, "has_hdr", catalog->has_hdr);

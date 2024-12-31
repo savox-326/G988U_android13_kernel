@@ -6497,17 +6497,20 @@ bool is_hbm_level(struct samsung_display_driver_data *vdd)
 static void ss_calc_brightness_level(struct samsung_display_driver_data *vdd, int level)
 {
 	int current_level;
-	struct backlight_device *bd;
+	struct backlight_device *bd = GET_SDE_BACKLIGHT_DEVICE(vdd);
+	bool use_current_bl_level =
+		level == USE_CURRENT_BL_LEVEL;
+	bool should_skip_update =
+		use_current_bl_level && (bd->props.brightness != vdd->br_info.common_br.bl_level);
 
-	if (level == USE_CURRENT_BL_LEVEL || ss_is_panel_on_ready(vdd)) {
-		bd = GET_SDE_BACKLIGHT_DEVICE(vdd);
+	if (use_current_bl_level) {
 		current_level = bd->props.brightness;
 	} else {
 		current_level = level;
 	}
 
-	if (ss_is_panel_on(vdd) || ss_is_panel_on_ready(vdd)) {
-		vdd->br_info.common_br.bl_level = expo_map_dim_level(current_level, GET_DSI_DISPLAY(vdd));
+	if (ss_is_panel_on(vdd)) {
+		vdd->br_info.common_br.bl_level = expo_map_dim_level(current_level, GET_DSI_DISPLAY(vdd), should_skip_update);
 	} else if (level != USE_CURRENT_BL_LEVEL) {
 		vdd->br_info.common_br.bl_level = level;
 	}
