@@ -205,6 +205,9 @@ void cam_mipi_init_setting(struct cam_sensor_ctrl_t *s_ctrl)
 		s_ctrl->mipi_info = sensor_imx555_setfile_tx_sensor_all_mode;
 		cur_mipi_sensor_mode = &(s_ctrl->mipi_info[0]);
 	} else if (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_IMX586) {
+#if defined(CONFIG_CAMERA_TELE_FORCE_HIGH_SPEED_MIPI)
+		s_ctrl->mipi_info = sensor_imx586_setfile_A_mipi_sensor_mode;
+#else
 		CAM_INFO(CAM_SENSOR, "[adaptive_mipi] sensor_mode : %d", s_ctrl->sensor_mode);
 		if (s_ctrl->sensor_mode == 0) {
 			s_ctrl->mipi_info = sensor_imx586_setfile_A_mipi_sensor_mode;
@@ -213,6 +216,7 @@ void cam_mipi_init_setting(struct cam_sensor_ctrl_t *s_ctrl)
 		} else {
 			s_ctrl->mipi_info = sensor_imx586_setfile_A_mipi_sensor_mode;
 		}
+#endif
 		cur_mipi_sensor_mode = &(s_ctrl->mipi_info[0]);
 	} else if (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_S5K2LA) {
 		CAM_INFO(CAM_SENSOR, "[adaptive_mipi] sensor_mode : %d", s_ctrl->sensor_mode);
